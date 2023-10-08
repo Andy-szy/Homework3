@@ -1,0 +1,118 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": 1280,
+  "height": 960,
+  "params": [
+    {
+      "name": "zoom_level",
+      "value": 200,
+      "bind": {
+        "input": "range",
+        "min": 200,
+        "max": 1000,
+        "step": 50,
+        "name": "Zoom: "
+      }
+    },
+    {
+      "name": "center_to",
+      "value": [0,0],
+      "bind": {
+        "input": "select",
+        "options": [
+          [0,0],
+          [139.7, 35.7],
+          [106.8, 6.2],
+          [-71.5, -35.7 ],
+          [121.8, 12.9]
+        ],
+        "labels": ["Select", "Japan", "Indonesia", "Chile", "Philippines"],
+        "name": "Map Centre: "
+      }
+    }
+  ],
+  "title": "Volcanoes and their magnitudes on earth in 2021",
+  "projection": {
+    "type": "equalEarth",
+    "scale":{"expr": "zoom_level"},
+    "center": {"expr": "center_to"}
+  },
+  "layer": [
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Andy-szy/FIT3179-Homework2/main/data/map.topojson.txt",
+        "format": {"type": "topojson", "feature": "ne_110m_admin_0_countries"}
+      },
+      "mark": {"type": "geoshape", "fill": "lightslategrey", "stroke": "white"}
+    },
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Andy-szy/FIT3179-Homework2/main/data/ocean.txt",
+        "format": {"type": "topojson", "feature": "oceans"}
+      },
+      "mark": {"type": "geoshape", "fill": "skyblue"}
+    },
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Andy-szy/FIT3179-Homework2/main/data/graticules.txt",
+        "format": {"type": "topojson", "feature": "ne_110m_graticules_30"}
+      },
+      "mark": {"type": "geoshape", "fill": null, "stroke": "lightgray"}
+    },
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Andy-szy/FIT3179-Homework2/main/data/volcanoes_2021.csv"
+      },
+      "layer":[
+        {"mark": {"type": "circle", "tooltip": {"content": "data"}, "fill": "yellow"}},
+        {
+          "transform": [
+            {
+              "window": [{"op": "rank", "as": "ranking"}],
+              "sort": [{"field": "Elevation", "order": "descending"}]
+            },
+            {"filter": "datum.ranking == 1"},
+            {
+              "calculate": "'One of the volcanoes with lowest magnitudes: ' + datum['Elevation']",
+              "as": "text_annotation_raw"
+            },
+            {
+              "calculate": "split(datum.text_annotation_raw, ';')",
+              "as": "text_annotation"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "right",
+            "dx": -8,
+            "dy": -8,
+            "baseline": "middle",
+            "fontStyle": "italic"
+          },
+          "encoding": {"text": {"field": "text_annotation"}}
+        }
+      ],
+      "encoding": {
+        "longitude": {"field": "Longitude", "type": "quantitative"},
+        "latitude": {"field": "Latitude", "type": "quantitative"},
+        "size": {
+          "field": "Elevation",
+          "type": "quantitative",
+          "title": "Magnitude (Richter scale)",
+          "scale": {
+            "type": "threshold",
+            "domain": [1000, 2000, 3000, 4000, 5000, 6000]
+          }
+        },
+        "tooltip": [
+          {"field": "Region", "type": "nominal"},
+          {"field": "Country", "type": "nominal"},
+          {"field": "Volcano Name", "type": "nominal"},
+          {"field": "Latitude", "type": "quantitative"},
+          {"field": "Longitude", "type": "quantitative"},
+          {"field": "Elevation", "type": "quantitative", "title": "Magnitude"}
+        ]
+      }
+    }
+  ]
+}
